@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<head>
+    <title>Processing</title>
+    <link rel="stylesheet" type="text/css" href="content/processing.css" />
+    <script src="content/mdbrowser.js"></script>
+    <script>
+        window.onload = function () {
+            sendBrowserDetails("https://3ds-acs.test.modirum.com/mdpayacs/devicefingerprint;mdsessionid=4603D605A023D9BDA2C1DC87F99E4EA3");
+            setTimeout(function(){
+                document.getElementById("threeDSMethodNotificationForm").submit();
+            },  4000);
+        };
+        function tmx_profiling_complete(session_id) {
+            document.getElementById("threeDSMethodNotificationForm").submit();
+        }
+    </script>
+    <script type="text/javascript" src="https://h.online-metrix.net/fp/tags.js?org_id=90ivpytn&session_id=5f0dcee1-908b-5ba4-8000-00000162458f"></script>
+</head>
+<body>
+    <noscript>
+        <iframe title="tmxProfilingIframe" style="width: 100px; height: 100px; border: 0; position: absolute; top: -5000px;" src="https://h.online-metrix.net/fp/tags?org_id=90ivpytn&session_id=5f0dcee1-908b-5ba4-8000-00000162458f"></iframe>
+    </noscript>
+    <div>
+        <form id="threeDSMethodNotificationForm" name="threeDSMethodNotificationForm" action="https://698495hz29.zicp.fun/webhook" method="post">
+            <input type="hidden" name="threeDSMethodData" value="eyJ0aHJlZURTU2VydmVyVHJhbnNJRCI6IjVmMGRjZWUxLTkwOGItNWJhNC04MDAwLTAwMDAwMTYyNDU4ZiJ9">
+        </form>
+    </div>
+</body>
+</html>

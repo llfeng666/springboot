@@ -3,10 +3,10 @@ package com.wdjr.support;
 import java.beans.ConstructorProperties;
 
 public enum FiservTestDataType {
-     CHALLENG_WITHOUT_IFRAME("CHALLENG_WITHOUT_IFRAME"),
-     CHALLENGE_WITH_IFRAME("CHALLENGE_WITH_IFRAME"),
-     FRICTIONLESS_WITH_IFRAME ("FRICTIONLESS_WITH_IFRAME"),
-     FRICTIONLESS_WITHOUT_IFRAME("FRICTIONLESS_WITHOUT_IFRAME");
+     CHALLENG_WITHOUT_IFRAME("challengeWithoutIframe"),
+     CHALLENGE_WITH_IFRAME("challengeWithIframe"),
+     FRICTIONLESS_WITH_IFRAME ("frictionlessWithIframe"),
+     FRICTIONLESS_WITHOUT_IFRAME("frictionlessWithoutIframe");
 
     private final String textValue;
 
