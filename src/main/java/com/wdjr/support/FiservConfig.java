@@ -29,6 +29,8 @@ public class FiservConfig {
     private String frictionlessWithIframe;
     @Value("${fiserv.frictionlessWithoutIframe:#{null}}")
     private  String frictionlessWithoutIframe;
+    @Value("${fiserv.termURL:#{null}}")
+    private String termURL;
 
     public Map<String,FiservTestDataType> getFiservCardMap(){
         return Map.of( getChallengeWithoutIframe(),FiservTestDataType.CHALLENG_WITHOUT_IFRAME,

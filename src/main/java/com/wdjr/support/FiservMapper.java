@@ -48,8 +48,8 @@ public class FiservMapper {
         paymentCardSaleTransaction.setPaymentMethod(toPaymentCardPaymentMethod(cardNo));
         final Secure3DAuthenticationRequest secure3DAuthenticationRequest =
                 new Secure3DAuthenticationRequest()
-                        .methodNotificationURL("https://698495hz29.zicp.fun/webhook")
-                        .termURL("https://698495hz29.zicp.fun/webhook")
+                        .methodNotificationURL(fiservConfig.getTermURL())
+                        .termURL(fiservConfig.getTermURL())
                         .challengeIndicator(
                                 Secure3DAuthenticationRequest.ChallengeIndicatorEnum._04);
         secure3DAuthenticationRequest.setAuthenticationType("Secure3DAuthenticationRequest");
