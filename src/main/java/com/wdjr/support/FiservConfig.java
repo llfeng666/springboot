@@ -27,6 +27,7 @@ public class FiservConfig {
     private String apiSecret;
     @Value("${fiserv.storeId:#{null}}")
     private String storeId;
+
     @Value("${fiserv.termURL:#{null}}")
     private String termURL;
 
