@@ -18,6 +18,7 @@ import com.github.GBSEcom.model.Secure3DAuthenticationRequest;
 import com.github.GBSEcom.model.Secure3DAuthenticationUpdateRequest;
 import com.github.GBSEcom.model.VoidPreAuthTransactions;
 import com.github.GBSEcom.model.VoidTransaction;
+import com.wdjr.entity.CardInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,7 @@ public class FiservMapper {
         
     }
 
-    public PaymentCardSaleTransaction toSaleTransactionRequest(final String cardNo) {
+    public PaymentCardSaleTransaction toSaleTransactionRequest(final CardInfo cardNo) {
         final PaymentCardSaleTransaction paymentCardSaleTransaction =
                 (PaymentCardSaleTransaction) new PaymentCardSaleTransaction()
                         .transactionAmount(toAmount()).
@@ -127,16 +128,16 @@ public class FiservMapper {
                         .numberOfInstallments(1));
     }
 
-    private PaymentCardPaymentMethod toPaymentCardPaymentMethod(final String cardNo) {
+    private PaymentCardPaymentMethod toPaymentCardPaymentMethod(final CardInfo cardInfo) {
 
         return new PaymentCardPaymentMethod().paymentCard(
                 new PaymentCard()
-                        .number(cardNo)
-                        .securityCode("873")
+                        .number(cardInfo.getCardNumber())
+                        .securityCode(cardInfo.getCvc())
                         .expiryDate(
                                 new Expiration()
-                                        .month("12")
-                                        .year("25")
+                                        .month(cardInfo.getExpirationMonth())
+                                        .year(cardInfo.getExpirationYear())
                         )
         );
     }

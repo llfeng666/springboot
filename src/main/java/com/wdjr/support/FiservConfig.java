@@ -1,17 +1,23 @@
 package com.wdjr.support;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.wdjr.entity.CardInfo;
+import lombok.Data;
 import lombok.Getter;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.CollectionUtils;
 
 @ConfigurationProperties(prefix = "fiserv")
 @Configuration
 @NonFinal
-@Getter
+@Data
 public class FiservConfig {
     @Value("${fiserv.baseUrl:#{null}}")
     private String baseUrl;
@@ -21,21 +27,24 @@ public class FiservConfig {
     private String apiSecret;
     @Value("${fiserv.storeId:#{null}}")
     private String storeId;
-    @Value("${fiserv.challengeWithoutIframe:#{null}}")
-    private String challengeWithoutIframe;
-    @Value("${fiserv.challengeWithIframe:#{null}}")
-    private String challengeWithIframe;
-    @Value("${fiserv.frictionlessWithIframe:#{null}}")
-    private String frictionlessWithIframe;
-    @Value("${fiserv.frictionlessWithoutIframe:#{null}}")
-    private  String frictionlessWithoutIframe;
+
     @Value("${fiserv.termURL:#{null}}")
     private String termURL;
 
-    public Map<String,FiservTestDataType> getFiservCardMap(){
-        return Map.of( getChallengeWithoutIframe(),FiservTestDataType.CHALLENG_WITHOUT_IFRAME,
-                getChallengeWithIframe(),FiservTestDataType.CHALLENGE_WITH_IFRAME,
-                getFrictionlessWithIframe(),FiservTestDataType.FRICTIONLESS_WITH_IFRAME,
-                getFrictionlessWithoutIframe(),FiservTestDataType.FRICTIONLESS_WITHOUT_IFRAME);
+    private List<CardInfo> cardInfoList;
+
+    public Map<String,String> getFiservCardMap(){
+        Map<String,String> fiservTestDataTypeMap = new HashMap<>();
+        cardInfoList.stream().forEach(e->{
+            fiservTestDataTypeMap.put(e.getCardNumber(),e.getTestType());
+                }
+        );
+        return fiservTestDataTypeMap;
+    }
+
+    public CardInfo getCardInfo(final String cardNo) {
+        final Map<String, List<CardInfo>> cardMap =
+                cardInfoList.stream().collect(Collectors.groupingBy(CardInfo::getCardNumber));
+        return CollectionUtils.isEmpty(cardMap) ? null : cardMap.get(cardNo).get(0);
     }
 }
