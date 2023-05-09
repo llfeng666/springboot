@@ -8,10 +8,27 @@ fiserv:
   apiKey: 3Ha4sMqYSYKd85PjfXN0HZJvZMAIU2O8
   apiSecret: ONxJtdKgFmBjZfb4sttplvrXWMCdgLVLFXCMpD8hF0y
   storeId: 6201172
-  challengeWithoutIframe: 4147463011110059
-  challengeWithIframe: 5204740000002745
-  frictionlessWithoutIframe: 4147463011110083
-  frictionlessWithIframe: 4265880000000007
   termURL: https://698495hz29.zicp.fun/webhook
+  cardInfoList:
+    - cardNumber: 4147463011110059
+      expirationMonth: 12
+      expirationYear: 25
+      cvc: 873
+      testType: challengeWithoutIframe
+    - cardNumber: 5204740000002745
+      expirationMonth: 12
+      expirationYear: 25
+      cvc: 873
+      testType: challengeWithIframe
+    - cardNumber: 4265880000000007
+      expirationMonth: 12
+      expirationYear: 25
+      cvc: 873
+      testType: frictionlessWithIframe
+    - cardNumber: 4147463011110083
+      expirationMonth: 12
+      expirationYear: 25
+      cvc: 873
+      testType: frictionlessWithoutIframe
 
 

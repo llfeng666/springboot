@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 
+import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.github.GBSEcom.client.ApiException;
 import com.github.GBSEcom.model.PaymentCardSaleTransaction;
@@ -19,15 +21,20 @@ import com.github.GBSEcom.simple.ClientContext;
 import com.github.GBSEcom.simple.ClientContextImpl;
 import com.github.GBSEcom.simple.ClientFactory;
 import com.github.GBSEcom.simple.MerchantCredentials;
+import com.wdjr.entity.CardInfo;
 import com.wdjr.entity.FromData;
 import com.wdjr.utils.FileUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.ResourceUtils;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Import(
         FiservConfig.class
@@ -61,24 +68,25 @@ public class FiservService {
         factory = context.getFactory();
     }
 
-    public String create3DsPayIn(final String cardNo,Model model) throws Exception {
+    public String create3DsPayIn(final String cardNo, Model model) throws Exception {
+        final CardInfo cardInfo = fiservConfig.getCardInfo(cardNo);
         final PaymentCardSaleTransaction paymentCardSaleTransaction =
-                fiservMapper.toSaleTransactionRequest(cardNo);
+                fiservMapper.toSaleTransactionRequest(cardInfo);
         final TransactionResponse transactionResponse;
         try {
             transactionResponse = factory.getPaymentApi().submitPrimaryTransaction(
                     paymentCardSaleTransaction);
         } catch (ApiException e) {
-            log.error("create3DsPayIn error",e.getResponseBody());
+            log.error("create3DsPayIn error :{}",e.getResponseBody());
             throw new RuntimeException(e);
         }
         String transactionId = transactionResponse.getIpgTransactionId();
         treansactionIds.add(transactionId);
-        final FiservTestDataType fiservTestDataType = fiservConfig.getFiservCardMap().get(cardNo);
-        return FiservTestDataType.FRICTIONLESS_WITHOUT_IFRAME.equals(fiservTestDataType)?
+        final String fiservTestDataType = fiservConfig.getFiservCardMap().get(cardInfo.getCardNumber());
+        return FiservTestDataType.FRICTIONLESS_WITHOUT_IFRAME.getTextValue().equals(fiservTestDataType)?
                 finishPrint(transactionResponse,model):
-         FiservTestDataType.CHALLENG_WITHOUT_IFRAME.equals(fiservTestDataType) ?
-                withOutIframe(transactionResponse) :
+         FiservTestDataType.CHALLENG_WITHOUT_IFRAME.getTextValue().equals(fiservTestDataType) ?
+                withOutIframe(transactionResponse,model) :
                 withIframe(transactionResponse);
     }
 
@@ -101,23 +109,27 @@ public class FiservService {
         return Optional.ofNullable(transactionResponse.getAuthenticationResponse()).map(
                         Secure3DAuthenticationResponse::getParams)
                 .map(Secure3DAuthenticationResponseParams::getAcsURL)
-                .isPresent() ? withOutIframe(transactionResponse) : finishPrint(transactionResponse,model);
+                .isPresent() ? withOutIframe(transactionResponse,model) : finishPrint(transactionResponse,model);
 
     }
 
 
-    private String finishPrint(final TransactionResponse transactionResponse,Model model) throws Exception {
+    private String finishPrint(TransactionResponse transactionResponse,Model model) throws Exception {
+        transactionResponse = factory.getPaymentApi()
+                .transactionInquiry(transactionResponse.getIpgTransactionId(),
+                        context.getDefaultRegion(),
+                        fiservConfig.getStoreId());
         final PaymentMethodDetails paymentMethodDetails =
                 transactionResponse.getPaymentMethodDetails();
         final FromData fromData = FromData.builder().
                 last4(paymentMethodDetails.getPaymentCard().getLast4())
                 .transactionId(transactionResponse.getIpgTransactionId())
-                .transactionStatus(transactionResponse.getTransactionStatus().name()).build();
+                .transactionStatus(transactionResponse.getTransactionState().name()).build();
         model.addAttribute("fromData", fromData);
         return "success/finish";
     }
 
-    public String withOutIframe(final TransactionResponse transactionResponse) throws Exception {
+    public String withOutIframe(final TransactionResponse transactionResponse,final Model model) throws Exception {
         final String cReq =
                 transactionResponse.getAuthenticationResponse().getParams().getcReq();
         final String acsURL =
@@ -125,11 +137,46 @@ public class FiservService {
         final String result = HttpUtil.post(acsURL, Map.of("creq", cReq));
         //request result
         log.info(result);
-        final File file = ResourceUtils.getFile("classpath:templates/withOutIframe.html");
-        boolean createFile = file.delete() ? file.createNewFile() : false;
-        FileUtils.writeTxtFile(result, file);
-        return "withOutIframe";
+        postReq(result);
+        return finishPrint(transactionResponse,model);
     }
+
+//    public String withOutIframe(final TransactionResponse transactionResponse,final Model model) throws Exception {
+//        final String cReq =
+//                transactionResponse.getAuthenticationResponse().getParams().getcReq();
+//        final String acsURL =
+//                transactionResponse.getAuthenticationResponse().getParams().getAcsURL();
+//        final String result = HttpUtil.post(acsURL, Map.of("creq", cReq));
+//        //request result
+//        log.info(result);
+//        final File file = ResourceUtils.getFile("classpath:templates/withOutIframe.html");
+//        boolean createFile = file.delete() ? file.createNewFile() : false;
+//        FileUtils.writeTxtFile(result, file);
+//        AsyncUtil.runAsyncDelay(()-> postReq(result),5, TimeUnit.SECONDS);
+//        return "withOutIframe";
+//    }
+
+    private void postReq(String result) {
+        String postUrl = result.substring(result.indexOf("action=\"")+8,result.indexOf(" method=\"")-1);
+        log.info(": {}",postUrl);
+        MultiValueMap<String,String> param = new LinkedMultiValueMap<>();
+        param.add("result","y");
+        param.add("slowdownMs","0");
+        final String confirmPage = WebClient.builder().baseUrl(postUrl)
+                .build().post()
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue(param)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        log.info(confirmPage);
+        final String inputToLast = confirmPage.substring(confirmPage.lastIndexOf("<input"),confirmPage.lastIndexOf("</form>"));
+        final String value = inputToLast.substring(inputToLast.lastIndexOf("value=") + 7,
+                inputToLast.lastIndexOf("\">"));
+        final String webhookResult = HttpUtil.post(fiservConfig.getTermURL(), Map.of("cres", value));
+        log.info("webhookResult: {}",webhookResult);
+    }
+
 
     public String withIframe(final TransactionResponse transactionResponse)
             throws Exception {
