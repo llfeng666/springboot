@@ -4,27 +4,15 @@ spring:
   thymeleaf:
     prefix: classpath:/templates/
 fiserv:
-  baseUrl: https://cert.api.firstdata.com/gateway/v2
-  apiKey: 3Ha4sMqYSYKd85PjfXN0HZJvZMAIU2O8
-  apiSecret: ONxJtdKgFmBjZfb4sttplvrXWMCdgLVLFXCMpD8hF0y
-  storeId: 6201172
+  baseUrl: https://prod.api.firstdata.com/gateway/v2
+  apiKey: 44Ou627XdacEhR0prGcwSqVfs1UAGWoj
+  apiSecret: fG0eEaJpCQHlZyiAiTQ6X0MCWAGjyNX8L1vmN95YG83
+  storeId: 6204778
   termURL: https://698495hz29.zicp.fun/webhook
   cardInfoList:
-    - cardNumber: 4147463011110059
-      expirationMonth: 12
-      expirationYear: 25
-      cvc: 873
-    - cardNumber: 5204740000002745
-      expirationMonth: 12
-      expirationYear: 25
-      cvc: 873
-    - cardNumber: 4265880000000007
-      expirationMonth: 12
-      expirationYear: 25
-      cvc: 873
-    - cardNumber: 4147463011110083
-      expirationMonth: 12
-      expirationYear: 25
-      cvc: 873
+    - cardNumber: 4041170044403255
+      expirationMonth: "09"
+      expirationYear: 23
+      cvc: 23
 
 

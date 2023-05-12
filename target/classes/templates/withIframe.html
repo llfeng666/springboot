@@ -1,31 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html lang="en">
-<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-<head>
-    <title>Processing</title>
-    <link rel="stylesheet" type="text/css" href="content/processing.css" />
-    <script src="content/mdbrowser.js"></script>
-    <script>
-        window.onload = function () {
-            sendBrowserDetails("https://3ds-acs.test.modirum.com/mdpayacs/devicefingerprint;mdsessionid=447D92BD0043AE28EB74B68B7DA1FA54");
-            setTimeout(function(){
-                document.getElementById("threeDSMethodNotificationForm").submit();
-            },  4000);
-        };
-        function tmx_profiling_complete(session_id) {
-            document.getElementById("threeDSMethodNotificationForm").submit();
-        }
-    </script>
-    <script type="text/javascript" src="https://h.online-metrix.net/fp/tags.js?org_id=90ivpytn&session_id=26b399d3-c461-51b5-8000-00000163e9b7"></script>
-</head>
-<body>
-    <noscript>
-        <iframe title="tmxProfilingIframe" style="width: 100px; height: 100px; border: 0; position: absolute; top: -5000px;" src="https://h.online-metrix.net/fp/tags?org_id=90ivpytn&session_id=26b399d3-c461-51b5-8000-00000163e9b7"></iframe>
-    </noscript>
-    <div>
-        <form id="threeDSMethodNotificationForm" name="threeDSMethodNotificationForm" action="https://698495hz29.zicp.fun/webhook" method="post">
-            <input type="hidden" name="threeDSMethodData" value="eyJ0aHJlZURTU2VydmVyVHJhbnNJRCI6IjI2YjM5OWQzLWM0NjEtNTFiNS04MDAwLTAwMDAwMTYzZTliNyJ9">
-        </form>
-    </div>
-</body>
+<html>
+<head><title>IPG Connect Sample for ASP</title></head>
+<body onLoad="document.tdsMmethodForm.submit();">
+<p><h1>Order Form</h1></p><form id="tdsMmethodForm" name="tdsMmethodForm" action="https://easyabc.95599.cn/acs-auth-web/3dsmethod/collect" method="post" target="tdsMmethodTgtFrame" xmlns="http://www.w3.org/1999/xhtml">    <input type="hidden" name="3DSMethodData" value="eyAidGhyZWVEU1NlcnZlclRyYW5zSUQiIDogIjI5OTEzMDlmLTMyNjgtNTIyNi04MDAwLTAwMDAwMjdkMTQ0NSIsICJ0aHJlZURTTWV0aG9kTm90aWZpY2F0aW9uVVJMIiA6ICJodHRwczovLzY5ODQ5NWh6MjkuemljcC5mdW4vd2ViaG9vayIgfQ"/>    <input type="hidden" name="threeDSMethodData" value="eyAidGhyZWVEU1NlcnZlclRyYW5zSUQiIDogIjI5OTEzMDlmLTMyNjgtNTIyNi04MDAwLTAwMDAwMjdkMTQ0NSIsICJ0aHJlZURTTWV0aG9kTm90aWZpY2F0aW9uVVJMIiA6ICJodHRwczovLzY5ODQ5NWh6MjkuemljcC5mdW4vd2ViaG9vayIgfQ"/>    <script type="text/javascript">				document.getElementById("tdsMmethodForm").submit();			</script></form></body>
 </html>

@@ -147,12 +147,23 @@ public class FiservService {
                 transactionResponse.getAuthenticationResponse().getParams().getcReq();
         final String acsURL =
                 transactionResponse.getAuthenticationResponse().getParams().getAcsURL();
-        final String result = HttpUtil.post(acsURL, Map.of("creq", cReq));
+        String html = "<html>\n" +
+                "<head><title>withOutIframe</title></head>\n" +
+                "<body onLoad=\"document.tdsMmethodForm.submit();\">\n" +
+                "<p><h1>Order Form</h1></p>\n" +
+                "  \n" +
+                "<form id=\"tdsMmethodForm\" name=\"tdsMmethodForm\" action=\""+acsURL +"\" method=\"post\" target=\"tdsMmethodTgtFrame\" xmlns=\"http://www.w3.org/1999/xhtml\">  " +
+                "  <input type=\"hidden\" name=\"creq\" value=\""+cReq+"\" />     </form>\n" +
+                "   \n" +
+                "</body>\n" +
+                "</html>";
+
+//        final String result = HttpUtil.post(acsURL, Map.of("creq", cReq));
         //request result
-        log.info(result);
+        log.info(html);
         final File file = ResourceUtils.getFile("classpath:templates/withOutIframe.html");
         boolean createFile = file.delete() ? file.createNewFile() : false;
-        FileUtils.writeTxtFile(result, file);
+        FileUtils.writeTxtFile(html, file);
         return "withOutIframe";
     }
 
@@ -178,26 +189,42 @@ public class FiservService {
     }
 
 
-    public String withIframe(final TransactionResponse transactionResponse)
-            throws Exception {
-        String methodForm =
-                transactionResponse.getAuthenticationResponse().getSecure3dMethod()
-                        .getMethodForm();
-        String inputStr = methodForm.substring(methodForm.indexOf("<input"), methodForm.indexOf("<script"));
-        log.info("inputStr: {}", inputStr);
-        final String threeDSMethodData =
-                inputStr.substring(inputStr.indexOf("value=\"") + 7, inputStr.indexOf("\"/"));
-        final Map<String, Object> requestMap =
-                Map.of("3DSMethodData", threeDSMethodData, "threeDSMethodData", threeDSMethodData);
+//    public String withIframe(final TransactionResponse transactionResponse)
+//            throws Exception {
+//        String methodForm =
+//                transactionResponse.getAuthenticationResponse().getSecure3dMethod()
+//                        .getMethodForm();
+//        String inputStr = methodForm.substring(methodForm.indexOf("<input"), methodForm.indexOf("<script"));
+//        log.info("inputStr: {}", inputStr);
+//        final String threeDSMethodData =
+//                inputStr.substring(inputStr.indexOf("value=\"") + 7, inputStr.indexOf("\"/"));
+//        final Map<String, Object> requestMap =
+//                Map.of("3DSMethodData", threeDSMethodData, "threeDSMethodData", threeDSMethodData);
+//
+//        String postUrl = methodForm.substring(methodForm.indexOf("action=\"")+8,methodForm.indexOf(" method=\"")-1);
+//        final String result = HttpUtil.post(postUrl,
+//                requestMap);
+//        log.info(result);
+//        final File file = ResourceUtils.getFile("classpath:templates/withIframe.html");
+//        boolean createFile = file.delete() ? file.createNewFile() : false;
+//        FileUtils.writeTxtFile(result, file);
+//        return "withIframe";
+//    }
 
-        String postUrl = methodForm.substring(methodForm.indexOf("action=\"")+8,methodForm.indexOf(" method=\"")-1);
-        final String result = HttpUtil.post(postUrl,
-                requestMap);
-        log.info(result);
+    private String withIframe(final TransactionResponse transactionResponse) throws Exception{
+        String methodForm = transactionResponse.getAuthenticationResponse().getSecure3dMethod()
+                        .getMethodForm();
+        String result = "<html>\n" +
+                "<head><title>withIframe</title></head>\n" +
+                "<body onLoad=\"document.tdsMmethodForm.submit();\">\n" +
+                "<p><h1>Order Form</h1></p>"+
+       methodForm.substring(methodForm.lastIndexOf("<form id"))
+                + "</body>\n" +
+                "</html>";
         final File file = ResourceUtils.getFile("classpath:templates/withIframe.html");
         boolean createFile = file.delete() ? file.createNewFile() : false;
         FileUtils.writeTxtFile(result, file);
         return "withIframe";
-    }
+       }
 
 }
