@@ -14,21 +14,17 @@ fiserv:
       expirationMonth: 12
       expirationYear: 25
       cvc: 873
-      testType: challengeWithoutIframe
     - cardNumber: 5204740000002745
       expirationMonth: 12
       expirationYear: 25
       cvc: 873
-      testType: challengeWithIframe
     - cardNumber: 4265880000000007
       expirationMonth: 12
       expirationYear: 25
       cvc: 873
-      testType: frictionlessWithIframe
     - cardNumber: 4147463011110083
       expirationMonth: 12
       expirationYear: 25
       cvc: 873
-      testType: frictionlessWithoutIframe
 
 

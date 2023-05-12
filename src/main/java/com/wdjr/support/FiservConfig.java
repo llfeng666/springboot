@@ -33,14 +33,6 @@ public class FiservConfig {
 
     private List<CardInfo> cardInfoList;
 
-    public Map<String,String> getFiservCardMap(){
-        Map<String,String> fiservTestDataTypeMap = new HashMap<>();
-        cardInfoList.stream().forEach(e->{
-            fiservTestDataTypeMap.put(e.getCardNumber(),e.getTestType());
-                }
-        );
-        return fiservTestDataTypeMap;
-    }
 
     public CardInfo getCardInfo(final String cardNo) {
         final Map<String, List<CardInfo>> cardMap =

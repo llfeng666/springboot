@@ -80,12 +80,13 @@ public class FiservService {
             log.error("create3DsPayIn error :{}",e.getResponseBody());
             throw new RuntimeException(e);
         }
+
         String transactionId = transactionResponse.getIpgTransactionId();
         treansactionIds.add(transactionId);
-        final String fiservTestDataType = fiservConfig.getFiservCardMap().get(cardInfo.getCardNumber());
-        return FiservTestDataType.FRICTIONLESS_WITHOUT_IFRAME.getTextValue().equals(fiservTestDataType)?
+        return TransactionResponse.TransactionStatusEnum.APPROVED.equals(transactionResponse.getTransactionStatus())?
                 finishPrint(transactionResponse,model):
-         FiservTestDataType.CHALLENG_WITHOUT_IFRAME.getTextValue().equals(fiservTestDataType) ?
+                Optional.ofNullable(transactionResponse.getAuthenticationResponse())
+                        .map(Secure3DAuthenticationResponse::getParams).isPresent() ?
                 withOutIframe(transactionResponse,model) :
                 withIframe(transactionResponse);
     }
@@ -129,18 +130,6 @@ public class FiservService {
         return "success/finish";
     }
 
-    public String withOutIframe(final TransactionResponse transactionResponse,final Model model) throws Exception {
-        final String cReq =
-                transactionResponse.getAuthenticationResponse().getParams().getcReq();
-        final String acsURL =
-                transactionResponse.getAuthenticationResponse().getParams().getAcsURL();
-        final String result = HttpUtil.post(acsURL, Map.of("creq", cReq));
-        //request result
-        log.info(result);
-        postReq(result);
-        return finishPrint(transactionResponse,model);
-    }
-
 //    public String withOutIframe(final TransactionResponse transactionResponse,final Model model) throws Exception {
 //        final String cReq =
 //                transactionResponse.getAuthenticationResponse().getParams().getcReq();
@@ -149,12 +138,23 @@ public class FiservService {
 //        final String result = HttpUtil.post(acsURL, Map.of("creq", cReq));
 //        //request result
 //        log.info(result);
-//        final File file = ResourceUtils.getFile("classpath:templates/withOutIframe.html");
-//        boolean createFile = file.delete() ? file.createNewFile() : false;
-//        FileUtils.writeTxtFile(result, file);
-//        AsyncUtil.runAsyncDelay(()-> postReq(result),5, TimeUnit.SECONDS);
-//        return "withOutIframe";
+//        postReq(result);
+//        return finishPrint(transactionResponse,model);
 //    }
+
+    public String withOutIframe(final TransactionResponse transactionResponse,final Model model) throws Exception {
+        final String cReq =
+                transactionResponse.getAuthenticationResponse().getParams().getcReq();
+        final String acsURL =
+                transactionResponse.getAuthenticationResponse().getParams().getAcsURL();
+        final String result = HttpUtil.post(acsURL, Map.of("creq", cReq));
+        //request result
+        log.info(result);
+        final File file = ResourceUtils.getFile("classpath:templates/withOutIframe.html");
+        boolean createFile = file.delete() ? file.createNewFile() : false;
+        FileUtils.writeTxtFile(result, file);
+        return "withOutIframe";
+    }
 
     private void postReq(String result) {
         String postUrl = result.substring(result.indexOf("action=\"")+8,result.indexOf(" method=\"")-1);
