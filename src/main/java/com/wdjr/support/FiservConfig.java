@@ -31,6 +31,9 @@ public class FiservConfig {
     @Value("${fiserv.termURL:#{null}}")
     private String termURL;
 
+    @Value("${fiserv.methodNotifictionURL:#{null}}")
+    private String methodNotifictionURL;
+
     private List<CardInfo> cardInfoList;
 
 

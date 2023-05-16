@@ -26,9 +26,21 @@ public class FiservController {
         return fiservService.create3DsPayIn(cardNo,model);
     }
 
-    @RequestMapping(value="/webhook",method = RequestMethod.POST)
-    public String update3Decure(final @RequestBody String payload,Model model) throws Exception {
-        log.info("receive webhook: {}", payload);
+    @RequestMapping(value="/callback/{idempotencyKey}",method = RequestMethod.POST)
+    public String callback(final @RequestBody String payload,
+                           @PathVariable String idempotencyKey,
+                           final Model model) throws Exception {
+        log.info("receive callback: {}", payload);
+        final String redirectUrl = fiservService.handleWebhook(payload,model);
+        return redirectUrl;
+    }
+
+
+    @RequestMapping(value="/notifiction/{idempotencyKey}",method = RequestMethod.POST)
+    public String methodNotifiction(final @RequestBody String payload,
+                                    @PathVariable String idempotencyKey,
+                                    Model model) throws Exception {
+        log.info("receive notifiction: {}", payload);
         final String redirectUrl = fiservService.handleWebhook(payload,model);
         return redirectUrl;
     }

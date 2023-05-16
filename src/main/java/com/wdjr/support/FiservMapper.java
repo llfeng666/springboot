@@ -3,6 +3,8 @@ package com.wdjr.support;
 import java.math.BigDecimal;
 import java.util.Random;
 
+import cn.hutool.core.lang.UUID;
+import cn.hutool.core.text.UnicodeUtil;
 import com.github.GBSEcom.model.ACSResponse;
 import com.github.GBSEcom.model.Amount;
 import com.github.GBSEcom.model.Expiration;
@@ -40,6 +42,7 @@ public class FiservMapper {
     }
 
     public PaymentCardSaleTransaction toSaleTransactionRequest(final CardInfo cardNo) {
+        final String uuid = UUID.fastUUID().toString();
         final PaymentCardSaleTransaction paymentCardSaleTransaction =
                 (PaymentCardSaleTransaction) new PaymentCardSaleTransaction()
                         .transactionAmount(toAmount()).
@@ -49,10 +52,14 @@ public class FiservMapper {
         paymentCardSaleTransaction.setPaymentMethod(toPaymentCardPaymentMethod(cardNo));
         final Secure3DAuthenticationRequest secure3DAuthenticationRequest =
                 new Secure3DAuthenticationRequest()
-                        .methodNotificationURL(fiservConfig.getTermURL())
-                        .termURL(fiservConfig.getTermURL())
+                        .methodNotificationURL(fiservConfig.getMethodNotifictionURL()
+                                .replace("idempotencyKey",uuid))
+                        .termURL(fiservConfig.getTermURL()
+                                .replace("idempotencyKey",uuid))
                         .challengeIndicator(
-                                Secure3DAuthenticationRequest.ChallengeIndicatorEnum._04);
+                                Secure3DAuthenticationRequest.ChallengeIndicatorEnum._02)
+                                .challengeWindowSize(
+                                        Secure3DAuthenticationRequest.ChallengeWindowSizeEnum._05);
         secure3DAuthenticationRequest.setAuthenticationType("Secure3DAuthenticationRequest");
         paymentCardSaleTransaction.setAuthenticationRequest(secure3DAuthenticationRequest);
         return paymentCardSaleTransaction;
@@ -118,7 +125,7 @@ public class FiservMapper {
 
     private Amount toAmount() {
         return new Amount().currency("MXN")
-                .total(new BigDecimal(new Random().nextInt(99)));
+                .total(new BigDecimal(6));
     }
 
     private Order toOrder() {

@@ -8,11 +8,15 @@ fiserv:
   apiKey: 44Ou627XdacEhR0prGcwSqVfs1UAGWoj
   apiSecret: fG0eEaJpCQHlZyiAiTQ6X0MCWAGjyNX8L1vmN95YG83
   storeId: 6204778
-  termURL: https://698495hz29.zicp.fun/webhook
+  termURL: https://698495hz29.zicp.fun/callback/idempotencyKey
+  methodNotifictionURL: https://698495hz29.zicp.fun/notifiction/idempotencyKey
   cardInfoList:
     - cardNumber: 4041170044403255
       expirationMonth: "09"
       expirationYear: 23
       cvc: 728
-
+    - cardNumber: 4915735014635459
+      expirationMonth: "12"
+      expirationYear: 24
+      cvc: 164
 
