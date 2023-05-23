@@ -5,17 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 
-import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.github.GBSEcom.client.ApiException;
 import com.github.GBSEcom.model.PaymentCardSaleTransaction;
 import com.github.GBSEcom.model.PaymentMethodDetails;
+import com.github.GBSEcom.model.ReturnTransaction;
 import com.github.GBSEcom.model.Secure3DAuthenticationResponse;
 import com.github.GBSEcom.model.Secure3DAuthenticationResponseParams;
-import com.github.GBSEcom.model.Secure3DAuthenticationUpdateRequest;
 import com.github.GBSEcom.model.TransactionResponse;
 import com.github.GBSEcom.simple.ClientContext;
 import com.github.GBSEcom.simple.ClientContextImpl;
@@ -23,8 +21,8 @@ import com.github.GBSEcom.simple.ClientFactory;
 import com.github.GBSEcom.simple.MerchantCredentials;
 import com.wdjr.entity.CardInfo;
 import com.wdjr.entity.FromData;
+import com.wdjr.entity.Secure3DSAuthenticationUpdateRequest;
 import com.wdjr.utils.FileUtils;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -45,7 +43,7 @@ public class FiservService {
     private ClientFactory factory;
     private ClientContext context;
     private final FiservConfig fiservConfig;
-    private final  FiservMapper fiservMapper;
+    private final FiservMapper fiservMapper;
     private List<String> treansactionIds = new ArrayList<>();
 
     @Autowired
@@ -77,23 +75,30 @@ public class FiservService {
             transactionResponse = factory.getPaymentApi().submitPrimaryTransaction(
                     paymentCardSaleTransaction);
         } catch (ApiException e) {
-            log.error("create3DsPayIn error :{}",e.getResponseBody());
-            throw new RuntimeException(e);
+            log.error("create3DsPayIn error :{}", e.getResponseBody());
+            return createView(e, model);
         }
 
         String transactionId = transactionResponse.getIpgTransactionId();
         treansactionIds.add(transactionId);
-        return TransactionResponse.TransactionStatusEnum.APPROVED.equals(transactionResponse.getTransactionStatus())?
-                finishPrint(transactionResponse,model):
+        return TransactionResponse.TransactionStatusEnum.APPROVED.equals(
+                transactionResponse.getTransactionStatus()) ?
+                finishPrint(transactionResponse, model) :
                 Optional.ofNullable(transactionResponse.getAuthenticationResponse())
                         .map(Secure3DAuthenticationResponse::getParams).isPresent() ?
-                withOutIframe(transactionResponse,model) :
-                withIframe(transactionResponse);
+                        withOutIframe(transactionResponse, model) :
+                        withIframe(transactionResponse);
+    }
+
+    private String createView(ApiException e, Model model) {
+        final FromData fromData = FromData.builder().errorMsg(e.getResponseBody()).build();
+        model.addAttribute("fromData", fromData);
+        return "success/error";
     }
 
 
-    public String handleWebhook(final String cRes,Model model) throws Exception {
-        final Secure3DAuthenticationUpdateRequest request =
+    public String handleWebhook(final String cRes, Model model) throws Exception {
+        final Secure3DSAuthenticationUpdateRequest request =
                 fiservMapper.toSecure3D21AuthenticationUpdateRequest(cRes);
         final TransactionResponse transactionResponse;
         final String transactionId = treansactionIds.get(treansactionIds.size() - 1);
@@ -104,18 +109,20 @@ public class FiservService {
                             request, context.getDefaultRegion());
         } catch (ApiException e) {
             log.error("finalizeSecureTransaction errorMsg: {}", e.getResponseBody(), e);
-            throw new RuntimeException(e);
+            return createView(e, model);
         }
 
         return Optional.ofNullable(transactionResponse.getAuthenticationResponse()).map(
                         Secure3DAuthenticationResponse::getParams)
                 .map(Secure3DAuthenticationResponseParams::getAcsURL)
-                .isPresent() ? withOutIframe(transactionResponse,model) : finishPrint(transactionResponse,model);
+                .isPresent() ? withOutIframe(transactionResponse, model) :
+                finishPrint(transactionResponse, model);
 
     }
 
 
-    private String finishPrint(TransactionResponse transactionResponse,Model model) throws Exception {
+    private String finishPrint(TransactionResponse transactionResponse, Model model)
+            throws Exception {
         transactionResponse = factory.getPaymentApi()
                 .transactionInquiry(transactionResponse.getIpgTransactionId(),
                         context.getDefaultRegion(),
@@ -142,7 +149,8 @@ public class FiservService {
 //        return finishPrint(transactionResponse,model);
 //    }
 
-    public String withOutIframe(final TransactionResponse transactionResponse,final Model model) throws Exception {
+    public String withOutIframe(final TransactionResponse transactionResponse, final Model model)
+            throws Exception {
         final String cReq =
                 transactionResponse.getAuthenticationResponse().getParams().getcReq();
         final String acsURL =
@@ -152,8 +160,9 @@ public class FiservService {
                 "<body onLoad=\"document.tdsMmethodForm.submit();\">\n" +
                 "<p><h1>Order Form</h1></p>\n" +
                 "  \n" +
-                "<form id=\"tdsMmethodForm\" name=\"tdsMmethodForm\" action=\""+acsURL +"\" method=\"post\" target=\"tdsMmethodTgtFrame\" xmlns=\"http://www.w3.org/1999/xhtml\">  " +
-                "  <input type=\"hidden\" name=\"creq\" value=\""+cReq+"\" />     </form>\n" +
+                "<form id=\"tdsMmethodForm\" name=\"tdsMmethodForm\" action=\"" + acsURL +
+                "\" method=\"post\" target=\"tdsMmethodTgtFrame\" xmlns=\"http://www.w3.org/1999/xhtml\">  " +
+                "  <input type=\"hidden\" name=\"creq\" value=\"" + cReq + "\" />     </form>\n" +
                 "   \n" +
                 "</body>\n" +
                 "</html>";
@@ -168,11 +177,12 @@ public class FiservService {
     }
 
     private void postReq(String result) {
-        String postUrl = result.substring(result.indexOf("action=\"")+8,result.indexOf(" method=\"")-1);
-        log.info(": {}",postUrl);
-        MultiValueMap<String,String> param = new LinkedMultiValueMap<>();
-        param.add("result","y");
-        param.add("slowdownMs","0");
+        String postUrl =
+                result.substring(result.indexOf("action=\"") + 8, result.indexOf(" method=\"") - 1);
+        log.info(": {}", postUrl);
+        MultiValueMap<String, String> param = new LinkedMultiValueMap<>();
+        param.add("result", "y");
+        param.add("slowdownMs", "0");
         final String confirmPage = WebClient.builder().baseUrl(postUrl)
                 .build().post()
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -181,11 +191,13 @@ public class FiservService {
                 .bodyToMono(String.class)
                 .block();
         log.info(confirmPage);
-        final String inputToLast = confirmPage.substring(confirmPage.lastIndexOf("<input"),confirmPage.lastIndexOf("</form>"));
+        final String inputToLast = confirmPage.substring(confirmPage.lastIndexOf("<input"),
+                confirmPage.lastIndexOf("</form>"));
         final String value = inputToLast.substring(inputToLast.lastIndexOf("value=") + 7,
                 inputToLast.lastIndexOf("\">"));
-        final String webhookResult = HttpUtil.post(fiservConfig.getTermURL(), Map.of("cres", value));
-        log.info("webhookResult: {}",webhookResult);
+        final String webhookResult =
+                HttpUtil.post(fiservConfig.getTermURL(), Map.of("cres", value));
+        log.info("webhookResult: {}", webhookResult);
     }
 
 
@@ -211,20 +223,41 @@ public class FiservService {
 //        return "withIframe";
 //    }
 
-    private String withIframe(final TransactionResponse transactionResponse) throws Exception{
+    private String withIframe(final TransactionResponse transactionResponse) throws Exception {
         String methodForm = transactionResponse.getAuthenticationResponse().getSecure3dMethod()
-                        .getMethodForm();
+                .getMethodForm();
         String result = "<html>\n" +
                 "<head><title>withIframe</title></head>\n" +
                 "<body onLoad=\"document.tdsMmethodForm.submit();\">\n" +
-                "<p><h1>Order Form</h1></p>"+
-       methodForm.substring(methodForm.lastIndexOf("<form id"))
+                "<p><h1>Order Form</h1></p>" +
+                methodForm.substring(methodForm.lastIndexOf("<form id"))
                 + "</body>\n" +
                 "</html>";
         final File file = ResourceUtils.getFile("classpath:templates/withIframe.html");
         boolean createFile = file.delete() ? file.createNewFile() : false;
         FileUtils.writeTxtFile(result, file);
         return "withIframe";
-       }
+    }
 
+    public String refund(String transactionId, Model model) {
+        final ReturnTransaction refund3dsRequest = fiservMapper.toRefund3dsRequest();
+        try {
+            final TransactionResponse transactionResponse = factory.getPaymentApi()
+                    .submitSecondaryTransaction(transactionId,
+                            refund3dsRequest,
+                            context.getDefaultRegion(),
+                            fiservConfig.getStoreId());
+            final TransactionResponse.TransactionStatusEnum transactionStatus =
+                    transactionResponse.getTransactionStatus();
+            log.info("transactionStatus : {}",transactionStatus);
+            log.info("transactionId:{}",transactionId);
+            log.info("transactionResponse:{}",transactionResponse);
+            final FromData fromData = FromData.builder().errorMsg("退款成功").build();
+            model.addAttribute("fromData", fromData);
+            return "success/error";
+        } catch (ApiException e) {
+            log.error("ReturnTransaction errorMsg: {}", e.getResponseBody(), e);
+            return createView(e, model);
+        }
+    }
 }

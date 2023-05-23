@@ -9,4 +9,5 @@ public class FromData {
     private String last4;
     private String transactionId;
     private  String transactionStatus;
+    private String errorMsg;
 }

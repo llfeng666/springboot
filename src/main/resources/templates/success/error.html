@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Spring Core Online Tutorial - Product Form</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body th:align="center">
+<div class="container">
+
+    <h1> 失败 </h1>
+    <div>
+        <form  th:object="${fromData}">
+
+            <div  th:class="${#fields.hasErrors('errorMsg')} ? 'form-group has-error' : 'form-group'">
+                <label class="col-sm-2 control-label">错误信息:</label>
+
+                <input type="text"  th:field="*{errorMsg}"
+                       th:errorclass="has-error"/>
+                <div class="form-group">
+
+
+            </div>
+
+
+        </form>
+
+
+    </div>
+
+    <p></p>
+    <p></p>
+    <p></p>
+</div>
+
+</body>
+</html>

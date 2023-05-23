@@ -21,6 +21,7 @@ import com.github.GBSEcom.model.Secure3DAuthenticationUpdateRequest;
 import com.github.GBSEcom.model.VoidPreAuthTransactions;
 import com.github.GBSEcom.model.VoidTransaction;
 import com.wdjr.entity.CardInfo;
+import com.wdjr.entity.Secure3DSAuthenticationUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Service;
@@ -129,10 +130,9 @@ public class FiservMapper {
     }
 
     private Order toOrder() {
-
         return new Order().installmentOptions(
                 new InstallmentOptions()
-                        .numberOfInstallments(1));
+                        .numberOfInstallments(3));
     }
 
     private PaymentCardPaymentMethod toPaymentCardPaymentMethod(final CardInfo cardInfo) {
@@ -164,16 +164,23 @@ public class FiservMapper {
     }
 
 
-    public Secure3DAuthenticationUpdateRequest toSecure3D21AuthenticationUpdateRequest(
+    public Secure3DSAuthenticationUpdateRequest toSecure3D21AuthenticationUpdateRequest(
             String cRes
     ) {
-        final Secure3DAuthenticationUpdateRequest request =
-                (Secure3DAuthenticationUpdateRequest) new Secure3DAuthenticationUpdateRequest()
+        final Secure3DSAuthenticationUpdateRequest request =
+                (Secure3DSAuthenticationUpdateRequest) new Secure3DSAuthenticationUpdateRequest()
                         .authenticationType("Secure3DAuthenticationUpdateRequest")
                         .storeId(fiservConfig.getStoreId());
         return cRes.contains("cres") ?
-                request.acsResponse(new ACSResponse().cRes(cRes.substring(cRes.indexOf("=") + 1))) :
+                request.acsResponse(new ACSResponse().cRes(cRes.substring(cRes.indexOf("=") + 1)))
+                        .securityCode("728") :
                 request.methodNotificationStatus(
-                        Secure3DAuthenticationUpdateRequest.MethodNotificationStatusEnum.RECEIVED);
+                        Secure3DSAuthenticationUpdateRequest.MethodNotificationStatusEnum.RECEIVED);
+    }
+
+
+    public ReturnTransaction toRefund3dsRequest() {
+        return (ReturnTransaction) new ReturnTransaction()
+                .transactionAmount(toAmount()).requestType(FiservRequestType.RETURN.getTextValue());
     }
 }

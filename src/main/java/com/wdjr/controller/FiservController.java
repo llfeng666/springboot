@@ -31,7 +31,8 @@ public class FiservController {
                            @PathVariable String idempotencyKey,
                            final Model model) throws Exception {
         log.info("receive callback: {}", payload);
-        final String redirectUrl = fiservService.handleWebhook(payload,model);
+        final String payloadStr = payload.substring(0, payload.indexOf("&threeDSS"));
+        final String redirectUrl = fiservService.handleWebhook(payloadStr,model);
         return redirectUrl;
     }
 
@@ -43,6 +44,12 @@ public class FiservController {
         log.info("receive notifiction: {}", payload);
         final String redirectUrl = fiservService.handleWebhook(payload,model);
         return redirectUrl;
+    }
+
+
+    @RequestMapping("/test/refund/{transactionId}")
+    public String refund(@PathVariable String transactionId,Model model) throws Exception {
+        return fiservService.refund(transactionId,model);
     }
 
 }
